@@ -1,0 +1,39 @@
+\documentclass{11pt}{article}
+\usepackage{cite}
+@misc{Calgazi6
+author=Courthey Algazi
+title= Southern Memoirs, Gender, and the Lost Cause Ideology at the Turn of the Century
+description: Examinig First-Person Narratives of the American South Through Text Analysis
+year=2019}
+\begin{document}
+
+@article{@Blight
+author={Blight, David}
+title={"What Will Peace among the Whites Bring?": Reunion and Race in the Struggle over the Memory of the Civil War in American Culture"}
+journal{=*Massachussetts Review,* Vol. 34 No. 3}
+year={1993}
+note={Stable URL: https://www.jstor.org/stable/25090451}
+
+@Book{@Gardner2004
+author={Gardner, Sarah E.}
+title={Blood and Irony: Southern White Women's Narratives of the Civil War 1861-1937}
+publisher={University of North Carolina Press}
+address={Chapel Hill, NC}
+year = {2004}
+
+@Book{janney2009,
+author= {Janney, Caroline}
+title={Burying the Dead but Not the Past:Ladies Memorial Associatins and the Lost Cause }
+publisher={University of North Carolina Press}
+address= {Chapel Hill, NC}
+year{2009}
+
+
+
+@article{robbins2003,
+author = {Robbins, Glen}
+title = {Lost Cause Motherhood and Women Writers}
+journal = {*Louisiana History: The Journal of the Louisiana Historical Association,* Vol. 44, No. 3}
+year = {2003}
+note={https://www.jstor.org/stable/4233937},
+}
