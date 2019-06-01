@@ -1,0 +1,234 @@
+---
+title: "final project practice"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+---
+title: Southern Memoirs, Gender, and the Lost Cause Ideology at the Turn of the Century
+description: Examinig First-Person Narratives of the American South Through Text Analysis
+  A new article created using the Distill format.
+author:
+  - name: Courtney Algazi 
+    url: https://cmalgazi.com/
+    affiliation: George Mason University
+    affiliation_url: https://example.com/spacelysprokets
+date: "`r Sys.Date()`"
+output: distill::distill_article
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+library("tidyverse")
+library(tidytext)
+library(tidyverse)
+library(quanteda)
+library(readr)
+library(stringr)
+library(dplyr)
+library(readtext)
+library(knitr)
+library(kableExtra)
+
+texts <- readtext("texts/*")
+metadata <- read.csv("doc_s_revision.csv")
+texts <- texts %>% mutate(doc_id = str_remove(doc_id, "\\.txt"))
+metadata <- metadata %>% mutate(doc_id = str_remove(doc_id, "\\.xml"))
+texts <- texts %>%
+  left_join(metadata, by = "doc_id") %>%
+  select(everything(), text)
+
+
+
+```
+
+The Confederate defeat in the American Civil War  completely up-ended Southern society, disrupting political institutions, cultural norms, and even gender relations. In the years following the conflict, white Southerners fought reestablish the region's antebellum honor and legacy.  Members of men’s veterans and ladies' memorial organizations, such as the United Confederate Veterans and the United Daughters of the Confederacy, worked arduously to advance the myth of the  "Lost Cause," a narrative that justified the Southern participation in the war. Proponents of this ideology advanced three core tenets. They argued African Americans benefited from the slavery, which was a benevolent and civilizing institution. Confederate soldiers fought valiently to defend their homes, protect southern womanhood, and safeguard sacred constitutional rights- not the institution of slavery reconstruction. Finally, they asserted that the Reconstruction era was a period marked by tyrannical, Yankee rule and political corruption.^[@Gibbons2003]
+
+Southern white women played a central role throughout this process of cultural rebuilding. In many ways, women were the ideal ambassadors of the “Lost Cause.” As they were traditionally considered apolitical, ladies were placed under far less scrutiny during the postbellum period. In fact, in the immediate post-bellum period, they may have had more freedom than Southern men, who were under the watchful eye of the Federal government. Traditionally, historians studying this period have emphasized these organizations efforts in erecting monuments, organizing public celebrations, and preserving cemeteries to memorialize the Confederate military’s glorious legacy.^[@Janney2009] These organizations provided women with unprecedented political influence. However, within the last two decades, historians have begun to focus on Southern literature as a means to advance the “Lost Cause” ideology.  In her recent work, *Blood and Irony: Southern White Women's Narratives of the Civil War*, Sarah E. Gardner posits that publishing war-time diaries and narratives  provided an especially effective platform for  Southern white women. ^[@Gardner2004] 
+
+
+Although many women published their wartime experiences throughout the Reconstruction period and Gilded Age, the demand for women’s narratives increased significantly^[@Gardner2004].  This upsurge coincided with the founding of United Daughters of the Confederacy, the most influential Confederate women’s association. The UDC endorsed novice authors, providing a powerful institutional backing.  Given the constraints placed on men, their newfound platform, and support from their Southern sisters, one might expect that the twentieth century would mark serve as the pinnacle of women’s advocacy for the “Lost Cause.”  By employing methods in text analysis this study will examine white Southern men and women’s narratives to  compare their promotion of the “Lost Cause”  ideology. 
+
+```{r}
+
+csa_texts <- texts %>%
+  filter(race == "white",
+         CSA == TRUE,
+         Date >1860)%>%
+  arrange(Date)
+
+csa_post_udc <- csa_texts %>%
+  filter(Date > 1894)
+
+csa_post_udc_corpus <- corpus(csa_post_udc)
+
+csa_post_udc_dfm <- dfm(csa_post_udc_corpus, remove_punct = TRUE, remove_symbols = TRUE, remove = stopwords("en"))
+
+```
+The corpus used in this study has been uploaded from “Documenting the American South,” the University of North Carolina's digital repository of Southern history texts. This substantive collection houses the "First-Person Narratives of the American South." This collection houses war-time diaries and memoirs contain the diaries and memoirs of ordinary Southerners published between 1860 and 1920. Several of the authors are famous figures: Confederate spy, Belle Boyd; diarist Mary Boynkin Chesnut; and military general - noted Lost Cause advocate-Jubal Early. However, the majority of the authors included within this collection are less well-known.
+Southern women were able to serve as advocates for the Southern narrative of the war because they were not considered a salient political threat. Unlike the numerous soldiers who penned memoirs during the same period, their stories took place in domestic spaces, far from the battlefield. Keyness is a statistical measure that determines differences between corpora by identifying unique terms with each document or corpus.  Although it seems fairly straight forward, this preliminary analysis actually provides significant information about men's and women's lives in the Civil War Era. Historian Sarah Gardner notes that when trying to  to reassure neophyte authors of their legitimacy, men praised Southern women for providing a disparate audiences with a complete perspective of Confederate history. [@Gardner2004] Ironically, although men percieved their distane from the military sphere as a weakness, this separation  provided their political advantage in the post-war period.
+
+
+```{r, fig.width= 10 , fig.height= 10 }
+
+my_csa_dict <- dictionary(list(errors = c("de" , "en", "â", "oei", "cei")))
+
+keyness_corpus <- corpus_subset(csa_post_udc_corpus,
+                                gender %in% c("male", "female")) %>%
+  tokens()
+
+keyness_corpus_clean <- tokens_remove(keyness_corpus, pattern = my_csa_dict)
+
+keyness_corpus_clean_dfm <- dfm(keyness_corpus_clean, groups = "gender", remove= stopwords("english"),
+                   remove_punct = TRUE)
+
+csa_keyness <- textstat_keyness(keyness_corpus_clean_dfm, target = "female")
+
+tplot_csa_keyness <- textplot_keyness(csa_keyness, show_reference = TRUE, show_legend = TRUE, n= 20, color= c("pink", "darkblue")) +labs(title = "Worlds Apart") +labs(subtitle= "Examing Keyness Between Southern Men's and Women's Narratives") + labs(caption = "Plotting keyness highlights the distinguishing features of each corpus. The central features of men's narratives are all military terms, where as the women's corpus features either the names of family members or domestic settings." )
+
+tplot_csa_keyness
+```
+In the four decades following the war, Southern women  ardently resisted the movement towards national reunification. One of the key means through which southerners attempted to preserve their sectional identity was by retaining Southern battle names.  For many Southern women, this was a highly contentious issue. When collaborating with a Northern publishing company in preparation for the release of Mary Boynkin Chesnut’s classic diary, Myrna Lockett Avery reportedly balked at her editor’s suggestion that she include an index with Northern battle names.To make matters worse, she further suggested referring to the conflict as The Civil War. [@Gardner2004] The term “Civil War,” in particular, was anathema to Southerners, as it implied that the Confederacy was never truly a distinct  national entity. As a result, white Southerners developed and actively promoted alternate names for the conflict. Former Confederates have attempted to impose numerous names, ranging from “War of the Rebellion” to “The Second War for Independence. Modern readers would likely find controversy over naming  to be a fairly trivial issues. It is quite easy to snicker at terms such as “War of Northern Aggression.” However, for contemporaries, naming served as a critical terrain in war to preserve Southern culture and dignity. White Southerners had already lost so much, conceding to Yankee terminology would simply be too much to bear. 
+
+```{r, fig.width= 10, fig.height =7}
+
+csa_post_udc_women_corpus <- corpus_subset(csa_post_udc_corpus, gender == "female")
+
+docnames(csa_post_udc_women_corpus) <- apply(docvars(csa_post_udc_women_corpus, c("Date", "Author")), 1, paste, collapse = ",")
+ 
+civil_war_dict <- dictionary(list(war_names = c("Civil War", "War Between the States", "War of the Rebellion")))
+
+csa_post_udc_women_corpus <- corpus_subset(csa_post_udc_corpus, gender == "female")
+
+ war_names_xray <-textplot_xray(kwic(csa_post_udc_women_corpus, pattern = civil_war_dict),
+               scale = "relative",
+               sort = TRUE)  
+ war_names_xray + aes(color = keyword) + scale_color_manual(values= c('blue', 'red', 'darkgrey')) + labs(title = "What's in a Name?") + 
+ labs(subtitle = "Twentieth-Century Female Authors'Names for The Civil War'") + labs(caption = "Despite their abhorrence for the term,female authors overwhelmingly referred to the conflict as The Civil War")
+```
+ 
+ One might anticipate that at the height of the “Lost Cause” ideology’s popularity, alternative names for the war would be at an all-time high. However, plotting lexical dispersion plot yields somewhat surprising results. Despite their inherent dislike for the term, Southern women referred to the conflict as the “Civil War” far more than either of the alternatives, “War of the Rebellion” and “War Between the States.” There were very few attempts to even use an alternative name. Only Burton Harrison used “War Between the States” more frequently - and she still used “Civil War” two times. Of course, some authors avoided the term completely- it is noticeably absent from the account written by the Fayetteville, North Carolina chapter of the United Daughters of the Confederacy. Even Avery, who was so incensed by her publisher’s suggestion to include an index of Northern battle names, used the term once.
+There could be several explanations for this pattern. The narratives observed in this sample were written between the outbreak of the Spanish American War and the end of World War I, as Americans were beginning to turn away from sectional animosity and toward national unity.  It is possible that their acceptance of the standard, national term was inspired by a wave of war-time patriotism.  In the case of some of the later authors, such as Rebecca Latimer Felton, it is also plausible that Southern had accepted finally accepted the term. However, given Southern women’s continued support of the UDC and other Ladies Memorial organizations, this seems somewhat unlikely. Their decision more likely reflects Southern authors’ understanding that they were writing for both national readers and Northern publishing companies. Southern women were well aware that, if they wanted their message to reach a broader audience, they would have to make some concessions. While, in many ways, women had more freedom to directly challenge reunification, they were still constrained by Northern standards.
+
+
+```{r, fig.width= 11, fig.height= 9}
+ 
+ post_udc_men_corpus <- corpus_subset(csa_post_udc_corpus, gender == "male")
+ 
+ docnames(post_udc_men_corpus) <- apply(docvars(post_udc_men_corpus, c("Date", "Author")), 1, paste, collapse = ",")
+ 
+ war_names_xray_men <-textplot_xray(kwic(post_udc_men_corpus, pattern = civil_war_dict),
+               scale = "relative",
+               sort = TRUE) 
+ war_names_xray_men + aes(color = keyword) + scale_color_manual(values= c('blue', 'red', 'darkgrey'))  + labs(title = NULL)+
+ labs(subtitle = "Twentieth-Century Southern Male Author's Name for 'The Civil War'") + labs(caption = "Despite the nascent unification movement, men in this study were more likely to embrace alternate names for The Civil War")
+
+```
+However, examining a lexical dispersion plot of the terms “Civil War”, “War Between the States,” and “War of the Rebellion” within men’s narratives yield slightly different results. Like their female counterparts, men generally used the term “Civil War” more frequently than alternatives. However, where as women predominantly used either the “Civil War” exclusively or employed both terms, some men exclusively used the alternative terminology. This however, was not widespread; a few ardent proponents of the Lost Cause seem reluctant to embrace national terminology. 
+Ex-Confederates willingness to adopt the term “Civil War” is not terribly surprising. As David Blight has noted,  the turn of the century brought a movement towards national reunion. Burgeoning international conflict, white Americans sought to bridge the national divide.[@Blight]. As the majority of the men in this study served in the Confederate military during the war, it is logical that they might be more willing to embrace Northern names in order to promote sectional harmony. As has been noted above, it was also more difficult for men to openly resist trends towards reunification. Unlike women,  men operated within the realm of formal politics,  they faced far more scrutiny from Northern critics throughout the postbellum period. Thus, it is somewhat surprising that Southern men would cling to Southern terminology.
+
+
+The Civil War looms large in American historical memory. Many scholars are captivated by with the notion of “Southern exceptionalism.” Thus, when reading narratives penned by Southern authors, it is fairly easy to look beyond regional conflict. Although Southern women at the turn of the twentieth century were very proud of their lineage, they also shared concern with women across the nation. Thus even though Southern white women were active in promoting the “Lost Cause,” there were other causes that merited their attention. 
+	In their memoirs, Southern men and women dedicated significant attention to “the Cause.” They often used flowery, or poetic language, describing the Confederate war effort as “noble,” “glorious,” or even “meritorious.” Others reflected on the war years from a melancholy perspective and described it as “dead,” “defeated,” or “lost.” 
+
+```{r, fig.width=20, fig.height=15}
+
+
+post_udc_men_toks <- tokens(post_udc_men_corpus)
+
+cause_men_dfm <- tokens_keep(post_udc_men_toks, pattern = phrase("cause"), window = 15)%>% dfm()
+no_cause_men_dfm <- tokens_remove(post_udc_men_toks, pattern = phrase("cause"), window =15)%>% dfm()
+
+
+tstat_key_cause_men<- textstat_keyness(rbind(cause_men_dfm, no_cause_men_dfm), seq_len(ndoc(cause_men_dfm)))
+
+tstat_key_cause_men_subset <- tstat_key_cause_men[tstat_key_cause_men$n_target > 10 ]
+
+men_cause_kable <-kable( head(tstat_key_cause_men_subset, 20))%>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))%>%
+  row_spec(2:4, bold = T, color = "black", background = c("cyan"))%>%
+  row_spec(6, bold = T, color="black", background = c("cyan"))%>%
+  row_spec(11:12, bold=T, color= "black", background= c("cyan"))%>%
+  row_spec(14:16, bold = T, color="black", background=c("cyan"))%>%
+  scroll_box(width = "80%", height= "100pix")
+  
+men_cause_kable
+
+```
+Targeted colocation analysis provides a means to observe differences across Southern men and women’s narrative. This method determines the degree of correlation between a specific term and related words across a corpus.   Among the twenty words with the strongest affiliation,  one can observe the terms that reflect the language traditionally affiliated with the ideology, including sectional descriptors  “southern” and “confederate” and words associated with loss, such as“lost”, and “defeat.”  However, men also wrote of their commitment to “the Cause.” Terms such as “devotion,” “loyalty,” and “loved” also show a strong correlation to the term. 
+
+```{r, fig.width = 10, fig.height= 6}
+suffrage <- c('suffrage', 'vote')
+
+post_udc_women_toks <- tokens(csa_post_udc_women_corpus)
+
+suffrage_dfm <- tokens_keep(post_udc_women_toks, pattern = phrase(suffrage), window = 10)%>% dfm()
+no_suffrage_dfm <- tokens_remove(post_udc_women_toks, pattern = phrase(suffrage), window =10)%>% dfm()
+
+tstat_key_suffrage<- textstat_keyness(rbind(suffrage_dfm, no_suffrage_dfm), seq_len(ndoc(suffrage_dfm)))
+
+
+cause_women_dfm <- tokens_keep(post_udc_women_toks, pattern = phrase("cause"), window = 15)%>% dfm()
+no_cause_women_dfm <- tokens_remove(post_udc_women_toks, pattern = phrase("cause"), window =15)%>% dfm()
+
+tstat_key_cause_women<- textstat_keyness(rbind(cause_women_dfm, no_cause_women_dfm), seq_len(ndoc(cause_women_dfm)))
+
+tstat_key_cause_women_subset <- tstat_key_cause_women[tstat_key_cause_women$n_target > 10 ]
+
+women_cause_kable <- kable(head(tstat_key_cause_women_subset, 20))%>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))%>%
+  row_spec(2, bold = T, color = "black", background =  c("pink"))%>%
+  row_spec(5:7, bold = T, color ="black", background = c("cyan"))%>%
+  row_spec(20,bold= T, color = "black", background = c("cyan"))%>%
+    scroll_box(width = "80%", height="100pix")
+women_cause_kable
+```
+One might expect a similar pattern to appear in a similar analysis of twentieth-century women’s texts. Throughout women’s narratives, obvious terms such as “lost,” “southern,” and “confederate,” do have a high correlation with the term “cause.” It is somewhat surprising. were no additional terms describing loss or defeat or highlighting commitment to Confederate principles.  What is possibly more intriguing, however, is the fact that the word “temperance” had a higher degree of correlation than terms traditionally connected to the “Lost Cause.” 
+	A similar pattern emerges through a collocation analysis of the terms “suffrage” and “vote.”  In many ways, it is not surprising that women would discuss voting, as the women’s suffrage movement reached its peak. However, Southern white women had fairly limited presence in the first wave of the women’s rights movement. When discussing Southern women’s political activities, historians generally turn cite their participation in Ladies Memorial societies and their commitment to the “Lost Cause.” However, targeted collocation analysis, once again, highlights an alternate pattern. While one might expect an author residing below the Mason-Dixon line to discuss the perils of the thirteenth-amendment, women were more likely to discuss their own political participation. Both “women” and “woman” had a stronger correlation with both “vote” and “suffrage” 
+
+```{r, fig.width= 10, fig.height= 5}
+
+suffrage <- c('suffrage', 'vote')
+
+suffrage_dfm <- tokens_keep(post_udc_women_toks, pattern = phrase(suffrage), window = 10)%>% dfm()
+no_suffrage_dfm <- tokens_remove(post_udc_women_toks, pattern = phrase(suffrage), window =10)%>% dfm()
+
+tstat_key_suffrage<- textstat_keyness(rbind(suffrage_dfm, no_suffrage_dfm), seq_len(ndoc(suffrage_dfm)))
+
+tstat_key_suffrage_subset <- tstat_key_suffrage[tstat_key_suffrage$n_target > 10 ]
+
+suffrage_kable<-kable(head(tstat_key_suffrage_subset, 10) )%>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed")) %>%
+  row_spec(5:6, bold = T, color = "black", background = c("yellow"))%>%
+  row_spec(7, bold = T, color = "black", background = c("cyan"))
+
+suffrage_kable
+
+```
+Yet, while targeted collocation analysis can illuminate connections obscured by a researcher’s inherent biases, it can also be potentially misleading. Although collocation calculate the correlation between terms, it does not reflect their distribution across the corpus. In other words, if the bigram “woman suffrage” is observed  twenty-seven times in a collection of narratives, it could appear once in twenty-seven documents or twenty-seven times in one text.  Lexical dispersion plots provide a means to remedy this issue, by highlighting the distribution of both terms across the corpus. It is possible that only a small subset of Southern authors were truly interested in either temperance or women’s suffrage.
+
+```{r}
+ temperance_dict <- dictionary(list(temperance = c("temperance", "temperance cause")))
+ 
+
+temperance_xray <- textplot_xray(kwic(csa_post_udc_women_corpus, pattern = temperance_dict),
+ scale = "relative",
+ sort = TRUE)
+ 
+ temperance_xray + aes(color = keyword) + scale_color_manual(values = c("darkblue", "darkred")) + labs(title = "Other Causes")
+ 
+ suffrage_dict <- dictionary(list(women_vote = c("woman vote", "women vote", "women suffrage", "woman suffrage")))
+ 
+ suffrage_xray <- textplot_xray(kwic(csa_post_udc_women_corpus, pattern = suffrage_dict),
+ scale = "relative",
+ sort = TRUE)
+ 
+ suffrage_xray +aes(color = keyword) + scale_color_manual(values = c("darkred" , "darkred" , "darkblue", "darkblue"))
+ 
+```
+With regards to temperance, this seems to be the case. Only four women mentioned either “temperance” or the “temperance cause” throughout their narrative. In fact, the overwhelming majority of the references to temperance can be found in Belle Kearney’s memoir. A similar pattern appears for women’s suffrage. Three authors, including prominent women’s rights activist Rebecca Latimer Felton, discussed women’s rights several times throughout her memoir. These women serve as a relatively small sample size. However, they illustrate that many women were now as  concerned with their own entry into formal politics.  focusing exclusively on racism and sectional tension.  These references serve as a reminder that, for some Southern women, the “Lost Cause” was not the only cause that mattered. 
+                    
